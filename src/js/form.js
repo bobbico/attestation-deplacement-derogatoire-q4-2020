@@ -96,6 +96,59 @@ const createReasonField = (reasonData) => {
   return formReason
 }
 
+const createMassGenTypeField = (reasonData) => {
+  const formReasonAttrs = { className: 'form-checkbox align-items-center' }
+  const formReason = createElement('div', formReasonAttrs)
+  const appendToReason = appendTo(formReason)
+
+  const id = `checkbox-${reasonData.code}`
+  const inputReasonAttrs = {
+    className: 'form-check-input',
+    type: 'checkbox',
+    id,
+    name: 'field-massGenType',
+    value: reasonData.code,
+  }
+  const inputReason = createElement('input', inputReasonAttrs)
+
+  const labelAttrs = { innerHTML: reasonData.label, className: 'form-checkbox-label', for: id }
+  const label = createElement('label', labelAttrs)
+
+  appendToReason([inputReason, label])
+  return formReason
+}
+
+const createmassGenTypeFieldset = (massGenTypeData) => {
+  const fieldsetAttrs = {
+    id: 'massGenType-fieldset',
+    className: 'fieldset',
+  }
+
+  const fieldset = createElement('fieldset', fieldsetAttrs)
+  const appendToFieldset = appendTo(fieldset)
+
+  const legendAttrs = {
+    className: 'legend titre-3',
+    innerHTML: 'Choisissez un type d\'édition de masse',
+  }
+  const legend = createElement('legend', legendAttrs)
+
+  const textAlertAttrs = { className: 'msg-alert hidden', innerHTML: 'Veuillez choisir un motif' }
+  const textAlert = createElement('p', textAlertAttrs)
+
+  const textSubscribeReasonAttrs = {
+    innerHTML: 'Merci d\'utiliser à des fins judicieuses et non falafacieuses',
+  }
+
+  const textSubscribeReason = createElement('p', textSubscribeReasonAttrs)
+
+  const reasonsFields = massGenTypeData.items.map(createMassGenTypeField)
+
+  appendToFieldset([legend, textAlert, textSubscribeReason, ...reasonsFields])
+  // Créer un form-checkbox par motif
+  return fieldset
+}
+
 const createReasonFieldset = (reasonsData) => {
   const fieldsetAttrs = {
     id: 'reason-fieldset',
@@ -139,6 +192,7 @@ export function createForm () {
   const formFirstPart = formData
     .flat(1)
     .filter(field => field.key !== 'reason')
+    .filter(field => field.key !== 'massGenType')
     .filter(field => !field.isHidden)
     .map((field,
       index) => {
@@ -156,5 +210,11 @@ export function createForm () {
     .find(field => field.key === 'reason')
 
   const reasonFieldset = createReasonFieldset(reasonsData)
-  appendToForm([...createTitle(), ...formFirstPart, reasonFieldset])
+
+  const massGenTypeData = formData
+    .flat(1)
+    .find(field => field.key === 'massGenType')
+
+  const massGenTypeFieldset = createmassGenTypeFieldset(massGenTypeData)
+  appendToForm([...createTitle(), ...formFirstPart, massGenTypeFieldset, reasonFieldset])
 }

@@ -5,6 +5,7 @@ import { addSlash, getFormattedDate } from './util'
 import pdfBase from '../certificate.pdf'
 import { generatePdf } from './pdf-util'
 import SecureLS from 'secure-ls'
+import JSZip from 'jszip'
 
 const secureLS = new SecureLS({ encodingType: 'aes' })
 const clearDataSnackbar = $('#snackbar-cleardata')
@@ -99,6 +100,9 @@ export function wantDataToBeStored () {
 export function setReleaseDateTime (releaseDateInput) {
   const loadedDate = new Date()
   releaseDateInput.value = getFormattedDate(loadedDate)
+  $('#field-placeofbirth').value = "Paris"
+  $('#field-heuresortie').value = "00:00"
+  $('#field-numberToGen').value = "1"
 }
 
 export function toAscii (string) {
@@ -132,14 +136,19 @@ export function getReasons (reasonInputs) {
     .map(input => input.value).join(', ')
   return reasons
 }
+export function getMassGenType (massGenTypeInputs) {
+  return massGenTypeInputs.find(
+    input => input.checked).value
+}
 
-export function prepareInputs (formInputs, reasonInputs, reasonFieldset, reasonAlert, snackbar, releaseDateInput) {
+export function prepareInputs (formInputs, reasonInputs, massGenTypeInputs, reasonFieldset, reasonAlert, snackbar, releaseDateInput) {
   const lsProfile = secureLS.get('profile')
 
   // Continue to store data if already stored
   storeDataInput.checked = !!lsProfile
   formInputs.forEach((input) => {
-    if (input.name && lsProfile && input.name !== 'datesortie' && input.name !== 'heuresortie' && input.name !== 'field-reason') {
+    if (input.name && lsProfile && input.name !== 'datesortie' && input.name !== 'heuresortie' && input.name !== 'field-reason'
+    && input.name !== 'field-massGenType') {
       input.value = lsProfile[input.name]
     }
     const exempleElt = input.parentNode.parentNode.querySelector('.exemple')
@@ -184,6 +193,7 @@ export function prepareInputs (formInputs, reasonInputs, reasonFieldset, reasonA
     event.preventDefault()
 
     const reasons = getReasons(reasonInputs)
+    console.log({reasons})
     if (!reasons) {
       reasonFieldset.classList.add('fieldset-error')
       reasonAlert.classList.remove('hidden')
@@ -196,15 +206,99 @@ export function prepareInputs (formInputs, reasonInputs, reasonFieldset, reasonA
       return
     }
     updateSecureLS(formInputs)
-    const pdfBlob = await generatePdf(getProfile(formInputs), reasons, pdfBase)
+    const numberToGen = parseInt($('#field-numberToGen').value)
+    let totalGeneratedFiles = 0
+    const initialReleaseDate = `${$('#field-datesortie').value}`
+    const zip = new JSZip();
+    console.log({numberToGen, initialReleaseDate})
+
+    const addDaysToDate = (_date, days) => {
+      const dateD = new Date(_date)
+      return new Date(dateD.setDate(dateD.getDate() + days)).toISOString().substr(0, 10)
+    }
+    const useMinuteWiseSettings = async (dayIndex, min) =>
+    {
+      const initialHeureSortie = $('#field-heuresortie').value
+      let heureSortie = parseInt($('#field-heuresortie').value.substr(0, 2))
+      let minuteSortie = parseInt($('#field-heuresortie').value.substr(3, 2))
+      const initialMinuteSortie = minuteSortie
+      while (heureSortie < 24){
+        let heureSortieStr = `${heureSortie}`;
+        if (heureSortie < 10){
+          heureSortieStr = `0${heureSortie}`;
+        }
+        while (minuteSortie < 60){
+
+          let minuteSortieStr = `${minuteSortie}`;
+          if (minuteSortie < 10){
+            minuteSortieStr = `0${minuteSortie}`;
+          }
+          console.log({heureSortieStr, minuteSortieStr, h:`${heureSortieStr}:${minuteSortieStr}`})
+          $('#field-heuresortie').value = `${heureSortieStr}:${minuteSortieStr}`
+          const pdfBlob = await generatePdf(getProfile(formInputs), reasons, pdfBase)
+          zip.file(`${addDaysToDate(initialReleaseDate, dayIndex)}/${heureSortieStr}h${minuteSortieStr}_${reasons.replaceAll(/, /g, "_")}.pdf`, pdfBlob)
+          totalGeneratedFiles++
+          minuteSortie += min
+        }
+        minuteSortie = initialMinuteSortie
+        heureSortie++
+      }
+      $('#field-heuresortie').value = initialHeureSortie
+    }
+    for (let i = 0; i < numberToGen; i++){
+      const massGenType = getMassGenType(massGenTypeInputs)
+      $('#field-datesortie').value = addDaysToDate(initialReleaseDate, i)
+      if (typeof massGenType === "undefined" || massGenType === "day"){
+        const pdfBlob = await generatePdf(getProfile(formInputs), reasons, pdfBase)
+        zip.file(`${addDaysToDate(initialReleaseDate, i)}_${reasons.replaceAll(/, /g, "_")}.pdf`, pdfBlob)
+        totalGeneratedFiles++
+      }
+      else if (massGenType === "hour"){
+        const initialHeureSortie = $('#field-heuresortie').value
+        let heureSortie = $('#field-heuresortie').value.substr(0, 2)
+        const minuteSortie = $('#field-heuresortie').value.substr(3, 2)
+        while (heureSortie < 24){
+          let heureSortieStr = `${heureSortie}`;
+          let minuteSortieStr = `${minuteSortie}`;
+          if (heureSortie < 10){
+            heureSortieStr = `0${heureSortie}`;
+          }
+          if (minuteSortie < 10){
+            minuteSortieStr = `0${minuteSortie}`;
+          }
+          console.log({heureSortieStr, minuteSortieStr, h:`${heureSortieStr}:${minuteSortieStr}`})
+          $('#field-heuresortie').value = `${heureSortieStr}:${minuteSortieStr}`
+          const pdfBlob = await generatePdf(getProfile(formInputs), reasons, pdfBase)
+          zip.file(`${addDaysToDate(initialReleaseDate, i)}_${heureSortieStr}h_${reasons.replaceAll(/, /g, "_")}.pdf`, pdfBlob)
+          totalGeneratedFiles++
+          heureSortie++
+        }
+        $('#field-heuresortie').value = initialHeureSortie
+      }
+      else if (massGenType === "demiheure"){
+        await useMinuteWiseSettings(i, 30)
+      }
+      else if (massGenType === "quartdheure"){
+        await useMinuteWiseSettings(i, 15)
+      }
+      else if (massGenType === "cinqminutes"){
+        await useMinuteWiseSettings(i, 5)
+      }
+    }
 
     const creationInstant = new Date()
     const creationDate = creationInstant.toLocaleDateString('fr-CA')
     const creationHour = creationInstant
       .toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
       .replace(':', '-')
-
-    downloadBlob(pdfBlob, `attestation-${creationDate}_${creationHour}.pdf`)
+    console.log({zip})
+    const path = `${totalGeneratedFiles}_attestations.zip`;
+    await zip.generateAsync({type:"blob"})
+      .then(function(content) {
+          // see FileSaver.js
+        downloadBlob(content, path)
+          //saveAs(, path);
+      });
     showSnackbar(snackbar, 6000)
   })
 }
@@ -213,9 +307,10 @@ export function prepareForm () {
   const formInputs = $$('#form-profile input')
   const snackbar = $('#snackbar')
   const reasonInputs = [...$$('input[name="field-reason"]')]
+  const massGenTypeInputs = [...$$('input[name="field-massGenType"]')]
   const reasonFieldset = $('#reason-fieldset')
   const reasonAlert = reasonFieldset.querySelector('.msg-alert')
   const releaseDateInput = $('#field-datesortie')
   setReleaseDateTime(releaseDateInput)
-  prepareInputs(formInputs, reasonInputs, reasonFieldset, reasonAlert, snackbar, releaseDateInput)
+  prepareInputs(formInputs, reasonInputs, massGenTypeInputs, reasonFieldset, reasonAlert, snackbar, releaseDateInput)
 }

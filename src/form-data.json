@@ -22,7 +22,7 @@
       "contentType": "birthday",
       "label": "Date de naissance",
       "autocomplete": "birthday",
-      "pattern": "^([0][1-9]|[1-2][0-9]|30|31)\/([0][1-9]|10|11|12)\/(19[0-9][0-9]|20[0-1][0-9]|2020)",
+      "pattern": "^([0][1-9]|[1-2][0-9]|30|31)\/([0][1-9]|10|11|12)\/(19[0-9][0-9]|[0-9][0-9][0-9][0-9]|2020)",
       "maxlength": 10,
       "placeholder": "01/01/1970"
     }
@@ -76,6 +76,12 @@
       "isHidden": true
     },
     {
+      "key": "numberToGen",
+      "type": "number",
+      "contentType": "numberToGen",
+      "label": "Nombre de journées à générer"
+    },
+    {
       "key": "creationHour",
       "type": "time",
       "contentType": "creationHour",
@@ -98,12 +104,43 @@
       "autocomplete": ""
     },
     {
+      "key": "massGenType",
+      "type": "list",
+      "contentType": "massGenType",
+      "items": [
+        {
+          "code": "day",
+          "label": "une par jour (par défault)"
+        },
+        {
+          "code":  "hour",
+          "label": "toutes les heures depuis l'heure de sortie pour chaque journée"
+        },
+        {
+          "code": "demiheure",
+          "label": "toutes les demi heures \" \" \" "
+        },
+        {
+          "code": "quartdheure",
+          "label": "toutes les quart d'heures \" \" \" "
+        },
+        {
+          "code": "cinqminutes",
+          "label": "toutes les cinq minutes \" \" \" "
+        },
+        {
+          "code": "especial",
+          "label": "Génerer en temps réel à chaque demi heure ; avec remplissage automatique d'une adresse via localisation GPS ainsi que que de fausse facture attestant le lieu de domicile. Non, la je plaisantais. "
+        }
+      ]
+    },
+    {
       "key": "reason",
       "type": "list",
       "items": [
         {
           "code": "travail",
-          "label": "Déplacements entre le domicile et le lieu d’exercice de l’activité professionnelle ou un établissement d’enseignement ou de formation, déplacements professionnels ne pouvant être différés <a class=\"footnote\" href=\"#footnote2\">[2]</a> , déplacements pour un concours ou un examen."
+          "label": "Déplacements entre le domicile et le lieu d’exercice de l’activité professionnelle ou un établissement d’enseignement ou de formation, déplacements professionnels ne pouvant être différés <a class=\"footnote\" href=\"#footnote2\">[2]</a> , déplacements pour un concours ou un examen. ; , "
         },
         {
           "code": "achats",
@@ -114,20 +151,37 @@
           "label": "Consultations, examens et soins ne pouvant être assurés à distance et l’achat de médicaments ;"
         },
         {
+          "code": "sport_animaux",
+          "label": "Tentative désespérée de retrouver le chat de la mère Michelle;"
+        },
+        {
+          "code": "sante",
+          "label": "Taille corporelle inférieure à 1m70 mais disposant d'une barbe très fournie ;"
+        },
+        {
+          "code": "famille",
+          "label": " Déplacements pour motif familial impérieux, pour l'assistance aux personnes vulnérables et précaires ou la garde d'enfants ;"
+        },
+        {
           "code": "famille",
           "label": " Déplacements pour motif familial impérieux, pour l'assistance aux personnes vulnérables et précaires ou la garde d'enfants ;"
         },
         {
           "code": "handicap",
-          "label": "Déplacement des personnes en situation de handicap et leur accompagnant ;"
+          "label": "Déplacement des personnes en situation de handicap et leur accompagnant, catégorie incluant toute personne liée de près ou de loin à cette gestion de crise ;"
         },
         {
           "code": "sport_animaux",
-          "label": "Déplacements brefs, dans la limite d'une heure quotidienne et dans un rayon maximal d'un kilomètre autour du domicile, liés soit à l'activité physique individuelle des personnes, à l'exclusion de toute pratique sportive collective et de toute proximité avec d'autres personnes, soit à la promenade avec les seules personnes regroupées dans un même domicile, soit aux besoins des animaux de compagnie ;"
+          "label": "Déplacements brefs, dans la limite d'une heure quotidienne, et dans un rayon maximal d'un kilomètre autour du domicile, liés soit à l'activité physique individuelle des personnes, à l'exclusion de toute pratique sportive collective et de toute proximité avec d'autres personnes, soit à la promenade avec les seules personnes regroupées dans un même domicile, soit aux besoins des animaux de compagnie ; à l'exception des rongeurs et de la recherche du chat de la mère Michelle;"
         },
+
         {
           "code": "convocation",
-          "label": " Convocation judiciaire ou administrative et pour se rendre dans un service public ;"
+          "label": "Convocation judiciaire ou administrative et pour se rendre dans un service public ;"
+        },
+        {
+          "code": "achats",
+          "label": "Pas de pierre, pas de palais"
         },
         {
           "code": "missions",

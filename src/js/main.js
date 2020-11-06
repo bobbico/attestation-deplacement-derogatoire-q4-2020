@@ -12,4 +12,4 @@ import { createForm } from './form'
 warnFacebookBrowserUserIfNecessary()
 createForm()
 prepareForm()
-addVersion(process.env.VERSION)
+//addVersion("42.42.4.2")

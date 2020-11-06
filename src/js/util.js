@@ -28,8 +28,4 @@ export function addSlash (str) {
     .replace(/\/\//g, '/')
 }
 
-export function addVersion (version) {
-  document.getElementById(
-    'version',
-  ).innerHTML = `${new Date().getFullYear()} - ${version}`
-}
+export const addVersion = "42.4.2";
